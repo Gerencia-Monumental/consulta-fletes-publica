@@ -7,195 +7,145 @@
     <title>Consulta de Operaciones</title>
     <style>
       :root {
-        --bg1: #071226;
-        --bg2: #0b1b3a;
+        --bg1: #06132a;
+        --bg2: #051a1d;
         --card: rgba(255, 255, 255, 0.06);
-        --card2: rgba(255, 255, 255, 0.08);
-        --line: rgba(255, 255, 255, 0.12);
-        --text: #eaf1ff;
-        --muted: rgba(234, 241, 255, 0.75);
-        --accent: #4f8cff;
-        --ok: #35d07f;
-        --warn: #ffcc66;
-        --bad: #ff6b6b;
+        --card2: rgba(0, 0, 0, 0.25);
+        --text: #eaf2ff;
+        --muted: rgba(234, 242, 255, 0.7);
+        --line: rgba(255, 255, 255, 0.10);
+        --accent: #3b82f6;
+        --ok: #22c55e;
+        --err: #ef4444;
       }
 
       * { box-sizing: border-box; }
       body {
         margin: 0;
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
         color: var(--text);
-        background:
-          radial-gradient(1200px 700px at 20% 0%, rgba(79,140,255,0.18), transparent 55%),
-          radial-gradient(900px 500px at 80% 10%, rgba(53,208,127,0.14), transparent 55%),
-          linear-gradient(180deg, var(--bg1), var(--bg2));
         min-height: 100vh;
+        background: radial-gradient(1200px 600px at 30% 0%, #0b2b63 0%, transparent 60%),
+                    radial-gradient(900px 500px at 80% 10%, #0b4b3f 0%, transparent 55%),
+                    linear-gradient(180deg, var(--bg1), var(--bg2));
+        display: flex;
+        justify-content: center;
+        padding: 42px 18px;
       }
 
-      .wrap {
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 48px 18px 64px;
-      }
+      .wrap { width: min(1100px, 100%); }
 
       h1 {
-        margin: 0 0 10px;
-        letter-spacing: 0.3px;
-        font-size: 34px;
-        font-weight: 800;
+        margin: 0 0 10px 0;
+        font-size: 42px;
+        letter-spacing: 0.2px;
       }
 
-      .subtitle {
-        margin: 0 0 22px;
-        color: var(--muted);
-      }
+      .sub { margin: 0 0 22px 0; color: var(--muted); }
 
       .card {
         background: var(--card);
         border: 1px solid var(--line);
         border-radius: 18px;
         padding: 18px;
-        box-shadow: 0 14px 40px rgba(0,0,0,0.35);
+        box-shadow: 0 10px 40px rgba(0,0,0,0.35);
         backdrop-filter: blur(10px);
       }
 
-      .row {
+      .grid {
         display: grid;
         grid-template-columns: 1.2fr 1fr 1fr auto;
-        gap: 12px;
+        gap: 14px;
         align-items: end;
       }
 
-      @media (max-width: 920px) {
-        .row { grid-template-columns: 1fr; }
-        button { width: 100%; }
-      }
-
-      label {
-        display: block;
-        font-size: 12px;
-        color: var(--muted);
-        margin: 0 0 6px;
-      }
+      label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
 
       input {
         width: 100%;
         padding: 12px 12px;
         border-radius: 12px;
         border: 1px solid var(--line);
-        background: rgba(0,0,0,0.18);
+        background: rgba(0,0,0,0.25);
         color: var(--text);
         outline: none;
       }
 
       input:focus {
-        border-color: rgba(79,140,255,0.7);
-        box-shadow: 0 0 0 3px rgba(79,140,255,0.18);
+        border-color: rgba(59,130,246,0.65);
+        box-shadow: 0 0 0 4px rgba(59,130,246,0.15);
       }
 
       button {
-        padding: 12px 16px;
+        padding: 12px 18px;
+        border: 0;
         border-radius: 12px;
-        border: 1px solid rgba(79,140,255,0.55);
-        background: linear-gradient(180deg, rgba(79,140,255,0.95), rgba(79,140,255,0.70));
+        background: linear-gradient(180deg, rgba(59,130,246,1), rgba(37,99,235,1));
         color: white;
-        font-weight: 700;
+        font-weight: 600;
         cursor: pointer;
-        height: 44px;
+        box-shadow: 0 8px 18px rgba(59,130,246,0.25);
       }
 
-      button:disabled {
-        opacity: 0.65;
-        cursor: not-allowed;
-      }
+      button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-      .meta {
-        margin-top: 12px;
+      .badges {
         display: flex;
         gap: 10px;
-        flex-wrap: wrap;
         align-items: center;
+        margin-top: 12px;
+        flex-wrap: wrap;
       }
 
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
+      .badge {
+        border: 1px solid var(--line);
+        background: rgba(0,0,0,0.18);
         padding: 8px 10px;
         border-radius: 999px;
-        border: 1px solid var(--line);
-        background: var(--card2);
         font-size: 12px;
         color: var(--muted);
       }
 
-      .dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 999px;
-        background: var(--muted);
-      }
+      .badge.ok { color: #bbf7d0; border-color: rgba(34,197,94,0.35); }
+      .badge.err { color: #fecaca; border-color: rgba(239,68,68,0.35); }
 
-      .dot.ok { background: var(--ok); }
-      .dot.bad { background: var(--bad); }
-      .dot.warn { background: var(--warn); }
-
-      .tableWrap {
+      .table-wrap {
         margin-top: 14px;
-        border-radius: 14px;
         border: 1px solid var(--line);
+        border-radius: 14px;
         overflow: auto;
+        background: var(--card2);
       }
 
       table {
         width: 100%;
         border-collapse: collapse;
-        min-width: 720px;
-        background: rgba(0,0,0,0.14);
+        min-width: 760px;
       }
 
       thead th {
-        position: sticky;
-        top: 0;
-        background: rgba(0,0,0,0.35);
-        border-bottom: 1px solid var(--line);
         text-align: left;
-        padding: 12px 12px;
         font-size: 12px;
-        color: rgba(234,241,255,0.85);
+        color: var(--muted);
+        padding: 12px 12px;
+        border-bottom: 1px solid var(--line);
         white-space: nowrap;
       }
 
       tbody td {
-        border-bottom: 1px solid rgba(255,255,255,0.07);
         padding: 12px 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
         font-size: 13px;
-        color: rgba(234,241,255,0.92);
         white-space: nowrap;
       }
 
-      tbody tr:hover {
-        background: rgba(79,140,255,0.08);
-      }
+      tbody tr:hover td { background: rgba(255,255,255,0.03); }
 
-      .empty, .errorBox {
-        margin-top: 14px;
-        padding: 12px 12px;
-        border-radius: 12px;
-        border: 1px solid var(--line);
-        background: rgba(0,0,0,0.18);
-        color: var(--muted);
-      }
+      .note { margin-top: 10px; color: var(--muted); font-size: 12px; }
 
-      .errorBox {
-        border-color: rgba(255,107,107,0.45);
-        color: rgba(255,220,220,0.95);
-      }
-
-      .hint {
-        margin-top: 10px;
-        font-size: 12px;
-        color: rgba(234,241,255,0.65);
+      @media (max-width: 880px) {
+        .grid { grid-template-columns: 1fr; }
+        button { width: 100%; }
       }
     </style>
   </head>
@@ -203,10 +153,10 @@
   <body>
     <div class="wrap">
       <h1>Consulta de Operaciones</h1>
-      <p class="subtitle">Busca por placa y opcionalmente por rango de fechas.</p>
+      <p class="sub">Busca por placa y opcionalmente por rango de fechas.</p>
 
       <div class="card">
-        <div class="row">
+        <div class="grid">
           <div>
             <label for="plate">Placa del vehículo</label>
             <input id="plate" placeholder="Ej: WOM140" />
@@ -227,138 +177,189 @@
           </div>
         </div>
 
-        <div class="meta">
-          <span class="pill" id="pillStatus">
-            <span class="dot" id="dot"></span>
-            <span id="statusText">Listo</span>
-          </span>
-          <span class="pill" id="pillTime" style="display:none;">
-            Tiempo: <span id="timeMs">0</span> ms
-          </span>
-          <span class="pill" id="pillCount" style="display:none;">
-            Resultados: <span id="count">0</span>
-          </span>
+        <div class="badges" id="badges" style="display:none;">
+          <span class="badge" id="statusBadge">Estado</span>
+          <span class="badge" id="timeBadge">Tiempo</span>
+          <span class="badge" id="countBadge">Resultados</span>
         </div>
 
-        <div id="out"></div>
+        <div class="table-wrap" style="margin-top: 14px;">
+          <table>
+            <thead>
+              <tr id="theadRow"></tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
 
-        <div class="hint">
+        <div class="note">
           Nota: la placa se normaliza automáticamente (mayúscula, sin espacios ni símbolos).
         </div>
       </div>
     </div>
 
     <script>
-      // ✅ SOLO MUESTRA ESTAS COLUMNAS (por índice dentro de la fila)
-      // Basado en tu ejemplo actual:
-      // Col 5 = WOM140 => index 4
-      // Col 6 = WILMAN BAUTISTA => index 5
-      // Col 7 = BUCARAMANGA => index 6
-      // Col 8 = 14.5 => index 7
-      // Col 11 = 1890000 => index 10
-      const COLUMN_MAP = [
-        { label: "Placa", index: 4 },
-        { label: "Conductor", index: 5 },
-        { label: "Origen", index: 6 },
-        { label: "Toneladas", index: 7, format: "num" },
-        { label: "Flete", index: 10, format: "money" },
+      // =========================
+      // CONFIG: columnas a mostrar
+      // =========================
+      // Excel: A=0, B=1, C=2, D=3, E=4, F=5, J=9, K=10, L=11, M=12, N=13, S=18
+      const COLUMNS = [
+        { letter: "A", idx: 0,  type: "dateMask" },
+        { letter: "B", idx: 1,  type: "text"     },
+        { letter: "C", idx: 2,  type: "dateMask" },
+        { letter: "D", idx: 3,  type: "dateMask" },
+        { letter: "E", idx: 4,  type: "firstLetterMask" },
+        { letter: "F", idx: 5,  type: "firstLetterMask" },
+        { letter: "J", idx: 9,  type: "text"     },
+        { letter: "K", idx: 10, type: "text"     },
+        { letter: "L", idx: 11, type: "text"     },
+        { letter: "M", idx: 12, type: "text"     },
+        { letter: "N", idx: 13, type: "text"     },
+        { letter: "S", idx: 18, type: "text"     },
       ];
 
+      // =========================
+      // Helpers de formato
+      // =========================
       function normalizePlate(s) {
         return (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
       }
 
-      function setStatus(kind, text) {
-        const dot = document.getElementById("dot");
-        dot.className = "dot " + (kind || "");
-        document.getElementById("statusText").innerText = text || "";
+      function pad2(n) {
+        return String(n).padStart(2, "0");
       }
 
-      function escapeHtml(v) {
-        const s = String(v ?? "");
-        return s
-          .replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll(">", "&gt;")
-          .replaceAll('"', "&quot;")
-          .replaceAll("'", "&#039;");
-      }
+      // Convierte posibles formatos a {dd, mm} y devuelve "DD-MM-****"
+      function dateMask(value) {
+        if (value === null || value === undefined || value === "") return "";
 
-      function safeNumber(v) {
-        const n = Number(v);
-        return Number.isFinite(n) ? n : null;
-      }
-
-      function formatCell(v, format) {
-        if (v === null || v === undefined) return "";
-        if (!format) return String(v);
-
-        if (format === "num") {
-          const n = safeNumber(v);
-          return n === null ? String(v) : n.toLocaleString("es-CO");
+        // Si viene como número (posible serial Excel)
+        if (typeof value === "number" && isFinite(value)) {
+          // Excel serial date (base 1899-12-30)
+          const base = new Date(Date.UTC(1899, 11, 30));
+          const d = new Date(base.getTime() + value * 86400000);
+          const dd = pad2(d.getUTCDate());
+          const mm = pad2(d.getUTCMonth() + 1);
+          return `${dd}-${mm}-****`;
         }
 
-        if (format === "money") {
-          const n = safeNumber(v);
-          return n === null
-            ? String(v)
-            : n.toLocaleString("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 });
+        const s = String(value).trim();
+
+        // ISO: YYYY-MM-DD
+        const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (iso) {
+          const mm = iso[2];
+          const dd = iso[3];
+          return `${dd}-${mm}-****`;
         }
 
-        return String(v);
+        // DD/MM/YYYY o DD-MM-YYYY
+        const dmy = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/);
+        if (dmy) {
+          const dd = pad2(dmy[1]);
+          const mm = pad2(dmy[2]);
+          return `${dd}-${mm}-****`;
+        }
+
+        // Si viene tipo "2026/03/04" o similar
+        const ymd = s.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
+        if (ymd) {
+          const mm = pad2(ymd[2]);
+          const dd = pad2(ymd[3]);
+          return `${dd}-${mm}-****`;
+        }
+
+        // Si no podemos parsear, lo devolvemos tal cual (mejor que romper)
+        return s;
       }
 
-      function renderTable(rows) {
-        const out = document.getElementById("out");
-
-        if (!Array.isArray(rows) || rows.length === 0) {
-          out.innerHTML = `<div class="empty">Sin resultados.</div>`;
-          return;
-        }
-
-        // Asegura que sean arrays
-        rows = rows.filter(r => Array.isArray(r));
-        if (rows.length === 0) {
-          out.innerHTML = `<div class="empty">Sin resultados.</div>`;
-          return;
-        }
-
-        const thead = `<thead><tr>${
-          COLUMN_MAP.map(c => `<th>${escapeHtml(c.label)}</th>`).join("")
-        }</tr></thead>`;
-
-        const tbody = `<tbody>${
-          rows.map(r => {
-            const tds = COLUMN_MAP.map(c => {
-              const raw = r[c.index];
-              const val = formatCell(raw, c.format);
-              return `<td>${escapeHtml(val)}</td>`;
-            }).join("");
-            return `<tr>${tds}</tr>`;
-          }).join("")
-        }</tbody>`;
-
-        out.innerHTML = `<div class="tableWrap"><table>${thead}${tbody}</table></div>`;
+      // E/F: primera letra + *****
+      function firstLetterMask(value) {
+        if (value === null || value === undefined) return "";
+        const s = String(value).trim();
+        if (!s) return "";
+        return s[0].toUpperCase() + "*****";
       }
+
+      function applyType(type, value) {
+        switch (type) {
+          case "dateMask": return dateMask(value);
+          case "firstLetterMask": return firstLetterMask(value);
+          default: return (value === null || value === undefined) ? "" : String(value);
+        }
+      }
+
+      // Soporta filas como array o como objeto con claves tipo A,B,C...
+      function getCell(row, col) {
+        if (Array.isArray(row)) return row[col.idx];
+        // si el backend devuelve objeto {A:..., B:...} o {0:...}
+        if (row && typeof row === "object") {
+          if (col.letter in row) return row[col.letter];
+          if (String(col.idx) in row) return row[String(col.idx)];
+        }
+        return "";
+      }
+
+      // =========================
+      // Render de tabla
+      // =========================
+      function renderHeader() {
+        const tr = document.getElementById("theadRow");
+        tr.innerHTML = "";
+        for (const c of COLUMNS) {
+          const th = document.createElement("th");
+          // Encabezado por letra (A,B,C...) tal como pediste
+          th.textContent = c.letter;
+          tr.appendChild(th);
+        }
+      }
+
+      function renderRows(rows) {
+        const tbody = document.getElementById("tbody");
+        tbody.innerHTML = "";
+
+        if (!rows || !rows.length) return;
+
+        for (const row of rows) {
+          const tr = document.createElement("tr");
+          for (const c of COLUMNS) {
+            const td = document.createElement("td");
+            const raw = getCell(row, c);
+            td.textContent = applyType(c.type, raw);
+            tr.appendChild(td);
+          }
+          tbody.appendChild(tr);
+        }
+      }
+
+      // =========================
+      // Submit
+      // =========================
+      renderHeader();
 
       async function submitForm() {
         const btn = document.getElementById("btn");
+        btn.disabled = true;
+
         const plate = normalizePlate(document.getElementById("plate").value);
-        const startDate = document.getElementById("startDate").value || null;
-        const endDate = document.getElementById("endDate").value || null;
-
-        document.getElementById("pillTime").style.display = "none";
-        document.getElementById("pillCount").style.display = "none";
-        document.getElementById("out").innerHTML = "";
-
         if (!plate) {
-          setStatus("warn", "Ingresa una placa válida (sin símbolos).");
-          alert("⚠️ La placa debe ingresarse SIN espacios, puntos o guiones.");
+          alert("⚠️ La placa debe ingresarse SIN espacios, puntos, guiones u otros caracteres especiales.");
+          btn.disabled = false;
           return;
         }
 
-        btn.disabled = true;
-        setStatus("", "Consultando...");
+        const startDate = document.getElementById("startDate").value || null;
+        const endDate = document.getElementById("endDate").value || null;
+
+        document.getElementById("badges").style.display = "flex";
+        const statusBadge = document.getElementById("statusBadge");
+        const timeBadge = document.getElementById("timeBadge");
+        const countBadge = document.getElementById("countBadge");
+
+        statusBadge.className = "badge";
+        statusBadge.textContent = "Consultando...";
+        timeBadge.textContent = "Tiempo: ...";
+        countBadge.textContent = "Resultados: ...";
 
         const t0 = performance.now();
 
@@ -369,50 +370,42 @@
             body: JSON.stringify({ plate, startDate, endDate }),
           });
 
-          const t1 = performance.now();
-          document.getElementById("pillTime").style.display = "inline-flex";
-          document.getElementById("timeMs").innerText = Math.round(t1 - t0);
+          const ms = Math.round(performance.now() - t0);
+          timeBadge.textContent = `Tiempo: ${ms} ms`;
 
-          const text = await resp.text();
+          const contentType = (resp.headers.get("content-type") || "").toLowerCase();
+          let data;
+
+          // Intentar JSON (ideal)
+          if (contentType.includes("application/json")) {
+            data = await resp.json();
+          } else {
+            // Si backend aún devuelve texto, intentamos parsearlo
+            const text = await resp.text();
+            try { data = JSON.parse(text); }
+            catch { data = { ok: resp.ok, rows: [] }; }
+          }
+
+          // Normalizar: esperamos { rows: [...] } o directamente [...]
+          const rows = Array.isArray(data) ? data : (data.rows || data.data || []);
+
+          countBadge.textContent = `Resultados: ${rows.length}`;
 
           if (!resp.ok) {
-            setStatus("bad", "Error");
-            document.getElementById("out").innerHTML =
-              `<div class="errorBox"><b>Error HTTP ${resp.status}</b><br/><br/><pre style="white-space:pre-wrap;margin:0;">${escapeHtml(text)}</pre></div>`;
-            return;
+            statusBadge.className = "badge err";
+            statusBadge.textContent = "Error";
+            renderRows([]);
+            alert("El servidor respondió con error. Revisa el log de la API.");
+          } else {
+            statusBadge.className = "badge ok";
+            statusBadge.textContent = "OK";
+            renderRows(rows);
           }
-
-          // Intentar parsear JSON (tu API devuelve arrays)
-          let data;
-          try {
-            data = JSON.parse(text);
-          } catch {
-            // Si el API devolvió texto (por ejemplo error), mostrarlo
-            setStatus("warn", "Respuesta no es JSON");
-            document.getElementById("out").innerHTML =
-              `<div class="errorBox"><b>La API no devolvió JSON.</b><br/><br/><pre style="white-space:pre-wrap;margin:0;">${escapeHtml(text)}</pre></div>`;
-            return;
-          }
-
-          // data puede ser [ [..fila..], [..fila..] ] o { rows: [...] }
-          const rows = Array.isArray(data) ? data : (data && data.rows) ? data.rows : [];
-
-          document.getElementById("pillCount").style.display = "inline-flex";
-          document.getElementById("count").innerText = Array.isArray(rows) ? rows.length : 0;
-
-          if (!Array.isArray(rows) || rows.length === 0) {
-            setStatus("warn", "Sin resultados");
-            document.getElementById("out").innerHTML = `<div class="empty">Sin resultados.</div>`;
-            return;
-          }
-
-          setStatus("ok", "OK");
-          renderTable(rows);
-
         } catch (e) {
-          setStatus("bad", "Error de conexión");
-          document.getElementById("out").innerHTML =
-            `<div class="errorBox"><b>Error de conexión</b><br/><br/>${escapeHtml(e?.message || e)}</div>`;
+          statusBadge.className = "badge err";
+          statusBadge.textContent = "Error";
+          renderRows([]);
+          alert("Error consultando la API. Revisa conexión o logs.");
         } finally {
           btn.disabled = false;
         }
