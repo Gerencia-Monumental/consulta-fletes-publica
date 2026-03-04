@@ -1,58 +1,138 @@
+// api/buscar/index.js
 const axios = require("axios");
 
-function json(res, status, body) {
-  return {
-    status,
-    headers: { "Content-Type": "application/json; charset=utf-8" },
-    body: JSON.stringify(body),
-  };
-}
+/**
+ * Columnas requeridas (por letra Excel): A,B,C,D,E,F,J,K,L,M,N,S
+ * Según tu encabezado:
+ * A  CUMPLIDO EL
+ * B  ESTADO DE CUMPLIDO
+ * C  PAGADO EL
+ * D  FECHAS VIAJES
+ * E  PLACA
+ * F  CONDUCTOR
+ * J  VALOR TOTAL DEL FLETE
+ * K  ANTICIPO
+ * L  ICA
+ * M  INTER2,4%
+ * N  RET
+ * S  VALOR TOTAL A PAGAR
+ */
+const OUT_COLUMNS = [
+  { idx: 0, key: "CUMPLIDO_EL" },           // A
+  { idx: 1, key: "ESTADO_CUMPLIDO" },       // B
+  { idx: 2, key: "PAGADO_EL" },             // C
+  { idx: 3, key: "FECHAS_VIAJES" },         // D
+  { idx: 4, key: "PLACA" },                 // E
+  { idx: 5, key: "CONDUCTOR" },             // F
+  { idx: 9, key: "VALOR_TOTAL_FLETE" },     // J
+  { idx: 10, key: "ANTICIPO" },             // K
+  { idx: 11, key: "ICA" },                  // L
+  { idx: 12, key: "INTER_2_4" },            // M
+  { idx: 13, key: "RET" },                  // N
+  { idx: 18, key: "VALOR_TOTAL_A_PAGAR" },  // S
+];
 
-function text(res, status, body) {
-  return {
-    status,
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
-    body: String(body),
-  };
+// Encabezados “bonitos” para la tabla del front
+const OUT_HEADERS = [
+  "Cumplido el",
+  "Estado de cumplido",
+  "Pagado el",
+  "Fechas viajes",
+  "Placa",
+  "Conductor",
+  "Valor total del flete",
+  "Anticipo",
+  "ICA",
+  "Inter 2,4%",
+  "RET",
+  "Valor total a pagar",
+];
+
+function needEnv(name) {
+  const v = process.env[name];
+  if (!v) throw new Error(`Falta variable de entorno: ${name}`);
+  return v;
 }
 
 function normalizePlate(s) {
   return (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
 
-function yyyyMmDdToExcelSerial(dateStr) {
-  // Convierte "YYYY-MM-DD" a serial de Excel (días desde 1899-12-30)
-  // Usamos UTC para evitar desfases.
-  const m = String(dateStr || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!m) return null;
-
-  const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
-  const dt = new Date(Date.UTC(y, mo - 1, d));
-  if (Number.isNaN(dt.getTime())) return null;
-
-  const base = new Date(Date.UTC(1899, 11, 30));
-  const diffDays = Math.floor((dt.getTime() - base.getTime()) / 86400000);
-  return diffDays;
+function maskFirstLetter(s) {
+  const t = String(s ?? "").trim();
+  if (!t) return "";
+  return t[0] + "*****";
 }
 
-async function getToken() {
-  const tenantId = process.env.TENANT_ID;
-  const clientId = process.env.CLIENT_ID;
-  const clientSecret = process.env.CLIENT_SECRET;
+function formatDateMasked(value) {
+  // Acepta: Date serial, ISO, "dd/mm/aaaa", etc.
+  if (value === null || value === undefined || value === "") return "";
 
-  if (!tenantId || !clientId || !clientSecret) {
-    throw new Error("Faltan TENANT_ID/CLIENT_ID/CLIENT_SECRET en variables de entorno.");
+  // Si viene como número (Excel serial)
+  if (typeof value === "number" && isFinite(value)) {
+    // Excel serial (aprox, suficiente para visual)
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+    const d = new Date(excelEpoch.getTime() + value * 86400000);
+    const dd = String(d.getUTCDate()).padStart(2, "0");
+    const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+    return `${dd}-${mm}-****`;
   }
+
+  const s = String(value).trim();
+
+  // Intento dd/mm/yyyy o dd-mm-yyyy
+  const m = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})$/);
+  if (m) {
+    const dd = String(m[1]).padStart(2, "0");
+    const mm = String(m[2]).padStart(2, "0");
+    return `${dd}-${mm}-****`;
+  }
+
+  // Intento ISO
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) {
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    return `${dd}-${mm}-****`;
+  }
+
+  // Si no se puede parsear, igual enmascara “año”
+  return s.replace(/\d{4}/g, "****");
+}
+
+function isBetween(dateStr, start, end) {
+  if (!dateStr) return true;
+
+  // Intento parsear fecha “real” (sin máscara) para filtrar.
+  // Si no se puede, no filtramos por fecha.
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return true;
+
+  if (start) {
+    const s = new Date(start);
+    if (!isNaN(s.getTime()) && d < s) return false;
+  }
+  if (end) {
+    const e = new Date(end);
+    if (!isNaN(e.getTime()) && d > e) return false;
+  }
+  return true;
+}
+
+async function getAccessToken() {
+  const tenantId = needEnv("TENANT_ID");
+  const clientId = needEnv("CLIENT_ID");
+  const clientSecret = needEnv("CLIENT_SECRET");
 
   const url = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
 
-  const form = new URLSearchParams();
-  form.append("client_id", clientId);
-  form.append("client_secret", clientSecret);
-  form.append("grant_type", "client_credentials");
-  form.append("scope", "https://graph.microsoft.com/.default");
+  const body = new URLSearchParams();
+  body.set("client_id", clientId);
+  body.set("client_secret", clientSecret);
+  body.set("grant_type", "client_credentials");
+  body.set("scope", "https://graph.microsoft.com/.default");
 
-  const resp = await axios.post(url, form.toString(), {
+  const resp = await axios.post(url, body.toString(), {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     timeout: 20000,
   });
@@ -60,133 +140,111 @@ async function getToken() {
   return resp.data.access_token;
 }
 
-async function fetchTableValues(token) {
-  const driveId = process.env.DRIVE_ID;
-  const itemId = process.env.ITEM_ID;
-  const tableName = process.env.TABLE_NAME;
+async function getTableRows(accessToken) {
+  const driveId = needEnv("DRIVE_ID");
+  const itemId = needEnv("ITEM_ID");
+  const tableName = needEnv("TABLE_NAME");
 
-  if (!driveId || !itemId || !tableName) {
-    throw new Error("Faltan DRIVE_ID/ITEM_ID/TABLE_NAME en variables de entorno.");
-  }
-
-  // Obtiene valores de la tabla de Excel (incluye encabezados si existen en la tabla)
+  // Lee filas del Excel Table (Graph)
+  // Nota: si tienes MUCHAS filas, se puede paginar; por ahora traemos “las que haya”
   const url = `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/workbook/tables/${encodeURIComponent(
     tableName
-  )}/range`;
+  )}/rows?$top=1000`;
 
   const resp = await axios.get(url, {
-    headers: { Authorization: `Bearer ${token}` },
-    timeout: 20000,
+    headers: { Authorization: `Bearer ${accessToken}` },
+    timeout: 30000,
   });
 
-  const values = resp.data?.values;
-  if (!Array.isArray(values) || values.length === 0) {
-    return { headers: [], rows: [] };
+  // resp.data.value[i].values = [ [col0, col1, ...] ]
+  const rows = [];
+  for (const r of resp.data.value || []) {
+    if (Array.isArray(r.values) && r.values[0]) rows.push(r.values[0]);
   }
-
-  // La primera fila del "range" normalmente es el header de la tabla
-  const headers = values[0];
-  const rows = values.slice(1);
-
-  return { headers, rows };
-}
-
-function buildHeaderIndex(headers) {
-  const map = new Map();
-  headers.forEach((h, i) => {
-    const key = String(h || "").trim().replace(/\s+/g, " ").toUpperCase();
-    map.set(key, i);
-  });
-  return map;
-}
-
-function cellToNumber(v) {
-  if (typeof v === "number") return v;
-  const s = String(v || "").replace(/\./g, "").replace(/,/g, ".").trim();
-  const n = Number(s);
-  return Number.isFinite(n) ? n : null;
-}
-
-function rowMatches(row, idx, plate, startSerial, endSerial) {
-  // Filtra por PLACA (columna E)
-  const iPlaca = idx.get("PLACA");
-  if (iPlaca === undefined) return false;
-
-  const placaRow = normalizePlate(row[iPlaca]);
-  if (placaRow !== plate) return false;
-
-  // Si no hay fechas, listo
-  if (startSerial === null && endSerial === null) return true;
-
-  // FECHAS VIAJES (columna D) puede venir como serial Excel o texto
-  const iFechaViajes = idx.get("FECHAS VIAJES");
-  if (iFechaViajes === undefined) return true; // si no existe, no bloqueamos
-
-  const raw = row[iFechaViajes];
-
-  let serial = null;
-  if (typeof raw === "number") serial = raw;
-  else {
-    // intenta parsear texto tipo YYYY-MM-DD o DD/MM/YYYY etc. -> lo convertimos a serial aproximado
-    const s = String(raw || "").trim();
-    // ISO
-    const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (iso) serial = yyyyMmDdToExcelSerial(`${iso[1]}-${iso[2]}-${iso[3]}`);
-    // DD/MM/YYYY
-    const dmy = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);
-    if (!serial && dmy) serial = yyyyMmDdToExcelSerial(`${dmy[3]}-${String(dmy[2]).padStart(2,"0")}-${String(dmy[1]).padStart(2,"0")}`);
-  }
-
-  // Si no logramos serial, no filtramos por fecha (para no perder datos)
-  if (serial === null) return true;
-
-  if (startSerial !== null && serial < startSerial) return false;
-  if (endSerial !== null && serial > endSerial) return false;
-
-  return true;
+  return rows;
 }
 
 module.exports = async function (context, req) {
+  const t0 = Date.now();
+
   try {
-    const { plate, startDate, endDate } = req.body || {};
-    const p = normalizePlate(plate);
+    const body = req.body || {};
+    const plate = normalizePlate(body.plate);
+    const startDate = body.startDate || null;
+    const endDate = body.endDate || null;
 
-    if (!p) {
-      return json(context.res, 400, { error: "PLATE_REQUIRED" });
+    if (!plate) {
+      context.res = {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+        body: { error: "Falta plate" },
+      };
+      return;
     }
 
-    const t0 = Date.now();
-    const token = await getToken();
-    const { headers, rows } = await fetchTableValues(token);
+    const token = await getAccessToken();
+    const allRows = await getTableRows(token);
 
-    // Si no hay headers reales, devolvemos error claro
-    if (!headers || headers.length === 0) {
-      return json(context.res, 500, { error: "NO_HEADERS_IN_TABLE", message: "La tabla de Excel no tiene encabezados." });
-    }
+    // Filtrado (por PLACA = columna E -> idx 4)
+    const filtered = allRows.filter((r) => {
+      const plateCell = normalizePlate(r?.[4]);
+      if (plateCell !== plate) return false;
 
-    const idx = buildHeaderIndex(headers);
+      // Si quieres filtrar por fechas, lo hacemos con COLUMNA D (Fechas viajes idx 3)
+      const fechasViajes = r?.[3] ? String(r[3]) : "";
+      return isBetween(fechasViajes, startDate, endDate);
+    });
 
-    const startSerial = startDate ? yyyyMmDdToExcelSerial(startDate) : null;
-    const endSerial = endDate ? yyyyMmDdToExcelSerial(endDate) : null;
+    // Transformación: solo columnas deseadas + máscaras
+    const outRows = filtered.map((r) => {
+      const obj = {};
+      for (const c of OUT_COLUMNS) obj[c.key] = r?.[c.idx] ?? "";
 
-    const filtered = rows.filter((r) => Array.isArray(r) && rowMatches(r, idx, p, startSerial, endSerial));
+      // Enmascarado fechas: A,C,D (idx 0,2,3)
+      obj.CUMPLIDO_EL = formatDateMasked(obj.CUMPLIDO_EL);
+      obj.PAGADO_EL = formatDateMasked(obj.PAGADO_EL);
+      obj.FECHAS_VIAJES = formatDateMasked(obj.FECHAS_VIAJES);
+
+      // Enmascarado E y F: primera letra + *****
+      obj.PLACA = maskFirstLetter(obj.PLACA);
+      obj.CONDUCTOR = maskFirstLetter(obj.CONDUCTOR);
+
+      return obj;
+    });
 
     const ms = Date.now() - t0;
 
-    // 👇 RESPUESTA FINAL: SIEMPRE incluye headers + rows
-    return json(context.res, 200, {
-      ok: true,
-      ms,
-      headers,
-      rows: filtered,
-    });
+    context.res = {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        // 👉 IMPORTANTE para tu front: “sí hay headers”
+        "X-Has-Headers": "1",
+      },
+      body: {
+        ok: true,
+        ms,
+        headers: OUT_HEADERS,
+        rows: outRows,
+        count: outRows.length,
+      },
+    };
   } catch (err) {
-    // Log interno (se ve en GitHub Actions)
-    context.log("API ERROR:", err?.message || err);
-    return json(context.res, 500, {
-      ok: false,
-      error: "API_ERROR",
-      message: err?.message || String(err),
-    });
+    const ms = Date.now() - t0;
+    const message = err?.response?.data
+      ? JSON.stringify(err.response.data)
+      : String(err?.message || err);
+
+    context.log("ERROR buscar:", message);
+
+    context.res = {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+      body: {
+        ok: false,
+        ms,
+        error: message,
+      },
+    };
   }
 };
