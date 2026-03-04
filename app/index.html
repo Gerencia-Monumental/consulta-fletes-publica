@@ -166,7 +166,7 @@
 
       // Render genérico: si viene una matriz (rows), la convierte a tabla.
       // Si el primer row parece encabezado (muchos strings), lo usa como header.
-      function renderTable(rows) {
+      function renderTable(rows, COLUMN_MAP) {
         const out = document.getElementById("out");
 
         if (!Array.isArray(rows) || rows.length === 0) {
