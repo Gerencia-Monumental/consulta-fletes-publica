@@ -6,135 +6,218 @@
     <title>Consulta de Operaciones</title>
     <style>
       :root {
-        --bg: #0b1220;
-        --card: #111a2e;
-        --muted: #9fb0d0;
-        --text: #e9efff;
+        --bg1: #071226;
+        --bg2: #0b1b3a;
+        --card: rgba(255, 255, 255, 0.06);
+        --card2: rgba(255, 255, 255, 0.08);
+        --line: rgba(255, 255, 255, 0.12);
+        --text: #eaf1ff;
+        --muted: rgba(234, 241, 255, 0.75);
         --accent: #4f8cff;
-        --danger: #ff5c7a;
-        --ok: #25d17c;
-        --border: rgba(255,255,255,.12);
+        --ok: #35d07f;
+        --warn: #ffcc66;
+        --bad: #ff6b6b;
       }
+
       * { box-sizing: border-box; }
       body {
         margin: 0;
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-        background: radial-gradient(1200px 600px at 20% 0%, #15234a, var(--bg));
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
         color: var(--text);
+        background:
+          radial-gradient(1200px 700px at 20% 0%, rgba(79,140,255,0.18), transparent 55%),
+          radial-gradient(900px 500px at 80% 10%, rgba(53,208,127,0.14), transparent 55%),
+          linear-gradient(180deg, var(--bg1), var(--bg2));
+        min-height: 100vh;
       }
-      .wrap { max-width: 980px; margin: 32px auto; padding: 0 16px; }
-      .title { font-size: 28px; font-weight: 800; margin: 0 0 14px; }
-      .sub { color: var(--muted); margin: 0 0 22px; }
+
+      .wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 48px 18px 64px;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        letter-spacing: 0.3px;
+        font-size: 34px;
+        font-weight: 800;
+      }
+
+      .subtitle {
+        margin: 0 0 22px;
+        color: var(--muted);
+      }
+
       .card {
-        background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 16px;
-        box-shadow: 0 10px 30px rgba(0,0,0,.25);
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 14px 40px rgba(0,0,0,0.35);
+        backdrop-filter: blur(10px);
       }
-      .grid {
+
+      .row {
         display: grid;
         grid-template-columns: 1.2fr 1fr 1fr auto;
         gap: 12px;
         align-items: end;
       }
-      label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px; }
+
+      @media (max-width: 920px) {
+        .row { grid-template-columns: 1fr; }
+        button { width: 100%; }
+      }
+
+      label {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        margin: 0 0 6px;
+      }
+
       input {
         width: 100%;
-        padding: 10px 12px;
-        border-radius: 10px;
-        border: 1px solid var(--border);
-        background: rgba(0,0,0,.25);
+        padding: 12px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        background: rgba(0,0,0,0.18);
         color: var(--text);
         outline: none;
       }
-      input:focus { border-color: rgba(79,140,255,.6); box-shadow: 0 0 0 3px rgba(79,140,255,.15); }
+
+      input:focus {
+        border-color: rgba(79,140,255,0.7);
+        box-shadow: 0 0 0 3px rgba(79,140,255,0.18);
+      }
+
       button {
-        padding: 10px 14px;
-        border-radius: 10px;
-        border: 1px solid rgba(79,140,255,.6);
-        background: rgba(79,140,255,.18);
-        color: var(--text);
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(79,140,255,0.55);
+        background: linear-gradient(180deg, rgba(79,140,255,0.95), rgba(79,140,255,0.70));
+        color: white;
         font-weight: 700;
         cursor: pointer;
-        white-space: nowrap;
+        height: 44px;
       }
-      button:hover { background: rgba(79,140,255,.28); }
-      button:disabled { opacity: .55; cursor: not-allowed; }
-      .bar {
+
+      button:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+      }
+
+      .meta {
+        margin-top: 12px;
         display: flex;
         gap: 10px;
+        flex-wrap: wrap;
         align-items: center;
-        margin-top: 14px;
-        color: var(--muted);
-        font-size: 13px;
       }
+
       .pill {
-        border: 1px solid var(--border);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
         border-radius: 999px;
-        padding: 6px 10px;
-        background: rgba(0,0,0,.18);
+        border: 1px solid var(--line);
+        background: var(--card2);
+        font-size: 12px;
+        color: var(--muted);
       }
-      .status.ok { color: var(--ok); }
-      .status.bad { color: var(--danger); }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: var(--muted);
+      }
+
+      .dot.ok { background: var(--ok); }
+      .dot.bad { background: var(--bad); }
+      .dot.warn { background: var(--warn); }
 
       .tableWrap {
         margin-top: 14px;
-        border: 1px solid var(--border);
         border-radius: 14px;
-        overflow: hidden;
+        border: 1px solid var(--line);
+        overflow: auto;
       }
-      table { width: 100%; border-collapse: collapse; }
-      thead th {
-        text-align: left;
-        font-size: 12px;
-        color: var(--muted);
-        background: rgba(0,0,0,.25);
-        padding: 10px;
-        border-bottom: 1px solid var(--border);
-      }
-      tbody td {
-        padding: 10px;
-        border-bottom: 1px solid rgba(255,255,255,.08);
-        font-size: 13px;
-      }
-      tbody tr:hover { background: rgba(255,255,255,.03); }
-      .empty { color: var(--muted); margin-top: 12px; }
-      .spinner {
-        width: 14px; height: 14px;
-        border: 2px solid rgba(255,255,255,.25);
-        border-top-color: var(--accent);
-        border-radius: 50%;
-        display: inline-block;
-        animation: spin .8s linear infinite;
-      }
-      @keyframes spin { to { transform: rotate(360deg); } }
 
-      @media (max-width: 900px) {
-        .grid { grid-template-columns: 1fr 1fr; }
-        button { width: 100%; }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 720px;
+        background: rgba(0,0,0,0.14);
+      }
+
+      thead th {
+        position: sticky;
+        top: 0;
+        background: rgba(0,0,0,0.35);
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        padding: 12px 12px;
+        font-size: 12px;
+        color: rgba(234,241,255,0.85);
+        white-space: nowrap;
+      }
+
+      tbody td {
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+        padding: 12px 12px;
+        font-size: 13px;
+        color: rgba(234,241,255,0.92);
+        white-space: nowrap;
+      }
+
+      tbody tr:hover {
+        background: rgba(79,140,255,0.08);
+      }
+
+      .empty, .errorBox {
+        margin-top: 14px;
+        padding: 12px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        background: rgba(0,0,0,0.18);
+        color: var(--muted);
+      }
+
+      .errorBox {
+        border-color: rgba(255,107,107,0.45);
+        color: rgba(255,220,220,0.95);
+      }
+
+      .hint {
+        margin-top: 10px;
+        font-size: 12px;
+        color: rgba(234,241,255,0.65);
       }
     </style>
   </head>
+
   <body>
     <div class="wrap">
-      <h1 class="title">Consulta de Operaciones</h1>
-      <p class="sub">Busca por placa y opcionalmente por rango de fechas.</p>
+      <h1>Consulta de Operaciones</h1>
+      <p class="subtitle">Busca por placa y opcionalmente por rango de fechas.</p>
 
       <div class="card">
-        <div class="grid">
+        <div class="row">
           <div>
-            <label>Placa del vehículo</label>
+            <label for="plate">Placa del vehículo</label>
             <input id="plate" placeholder="Ej: WOM140" />
           </div>
 
           <div>
-            <label>Fecha inicio</label>
+            <label for="startDate">Fecha inicio</label>
             <input type="date" id="startDate" />
           </div>
 
           <div>
-            <label>Fecha final</label>
+            <label for="endDate">Fecha final</label>
             <input type="date" id="endDate" />
           </div>
 
@@ -143,30 +226,88 @@
           </div>
         </div>
 
-        <div class="bar">
-          <span id="loading" class="pill" style="display:none;"><span class="spinner"></span> Consultando…</span>
-          <span id="meta" class="pill">Listo</span>
-          <span id="status" class="pill status ok">OK</span>
+        <div class="meta">
+          <span class="pill" id="pillStatus">
+            <span class="dot" id="dot"></span>
+            <span id="statusText">Listo</span>
+          </span>
+          <span class="pill" id="pillTime" style="display:none;">
+            Tiempo: <span id="timeMs">0</span> ms
+          </span>
+          <span class="pill" id="pillCount" style="display:none;">
+            Resultados: <span id="count">0</span>
+          </span>
         </div>
 
         <div id="out"></div>
+
+        <div class="hint">
+          Nota: la placa se normaliza automáticamente (mayúscula, sin espacios ni símbolos).
+        </div>
       </div>
     </div>
 
     <script>
+      // ✅ SOLO MUESTRA ESTAS COLUMNAS (por índice dentro de la fila)
+      // Basado en tu ejemplo actual:
+      // Col 5 = WOM140 => index 4
+      // Col 6 = WILMAN BAUTISTA => index 5
+      // Col 7 = BUCARAMANGA => index 6
+      // Col 8 = 14.5 => index 7
+      // Col 11 = 1890000 => index 10
+      const COLUMN_MAP = [
+        { label: "Placa", index: 4 },
+        { label: "Conductor", index: 5 },
+        { label: "Origen", index: 6 },
+        { label: "Toneladas", index: 7, format: "num" },
+        { label: "Flete", index: 10, format: "money" },
+      ];
+
       function normalizePlate(s) {
         return (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
       }
 
-      function escapeHtml(v) {
-        return String(v ?? "").replace(/[&<>"']/g, (m) => ({
-          "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-        }[m]));
+      function setStatus(kind, text) {
+        const dot = document.getElementById("dot");
+        dot.className = "dot " + (kind || "");
+        document.getElementById("statusText").innerText = text || "";
       }
 
-      // Render genérico: si viene una matriz (rows), la convierte a tabla.
-      // Si el primer row parece encabezado (muchos strings), lo usa como header.
-      function renderTable(rows, COLUMN_MAP) {
+      function escapeHtml(v) {
+        const s = String(v ?? "");
+        return s
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function safeNumber(v) {
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+      }
+
+      function formatCell(v, format) {
+        if (v === null || v === undefined) return "";
+        if (!format) return String(v);
+
+        if (format === "num") {
+          const n = safeNumber(v);
+          return n === null ? String(v) : n.toLocaleString("es-CO");
+        }
+
+        if (format === "money") {
+          const n = safeNumber(v);
+          return n === null
+            ? String(v)
+            : n.toLocaleString("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 });
+        }
+
+        return String(v);
+      }
+
+      function renderTable(rows) {
         const out = document.getElementById("out");
 
         if (!Array.isArray(rows) || rows.length === 0) {
@@ -174,66 +315,49 @@
           return;
         }
 
-        // Limpia filas totalmente vacías
-        rows = rows.filter(r => Array.isArray(r) && r.some(c => c !== null && c !== "" && c !== false));
-
+        // Asegura que sean arrays
+        rows = rows.filter(r => Array.isArray(r));
         if (rows.length === 0) {
           out.innerHTML = `<div class="empty">Sin resultados.</div>`;
           return;
         }
 
-        // Detecta header (heurística)
-        const first = rows[0];
-        const stringCount = first.filter(x => typeof x === "string" && x.trim().length > 0).length;
-        const hasHeader = stringCount >= Math.min(6, first.length * 0.5);
+        const thead = `<thead><tr>${
+          COLUMN_MAP.map(c => `<th>${escapeHtml(c.label)}</th>`).join("")
+        }</tr></thead>`;
 
-        let header = [];
-        let bodyRows = rows;
-
-        if (hasHeader) {
-          header = first.map((h, i) => (h && String(h).trim()) ? String(h).trim() : `Col ${i+1}`);
-          bodyRows = rows.slice(1);
-        } else {
-          // Header por defecto para que se vea bien (hasta 12 cols visibles)
-          const maxCols = Math.min(12, Math.max(...rows.map(r => r.length)));
-          header = Array.from({length: maxCols}, (_, i) => `Col ${i+1}`);
-        }
-
-        // Recorta columnas muy largas/irrelevantes (ajustable)
-        const maxColsToShow = Math.min(12, header.length);
-        header = header.slice(0, maxColsToShow);
-
-        const thead = `<thead><tr>${header.map(h => `<th>${escapeHtml(h)}</th>`).join("")}</tr></thead>`;
-        const tbody = `<tbody>
-          ${bodyRows.map(r => {
-            const cells = r.slice(0, maxColsToShow).map(c => `<td>${escapeHtml(c)}</td>`).join("");
-            return `<tr>${cells}</tr>`;
-          }).join("")}
-        </tbody>`;
+        const tbody = `<tbody>${
+          rows.map(r => {
+            const tds = COLUMN_MAP.map(c => {
+              const raw = r[c.index];
+              const val = formatCell(raw, c.format);
+              return `<td>${escapeHtml(val)}</td>`;
+            }).join("");
+            return `<tr>${tds}</tr>`;
+          }).join("")
+        }</tbody>`;
 
         out.innerHTML = `<div class="tableWrap"><table>${thead}${tbody}</table></div>`;
       }
 
       async function submitForm() {
         const btn = document.getElementById("btn");
-        const loading = document.getElementById("loading");
-        const meta = document.getElementById("meta");
-        const status = document.getElementById("status");
-
         const plate = normalizePlate(document.getElementById("plate").value);
-        if (!plate) {
-          alert("⚠️ La placa debe ingresarse SIN espacios, puntos, guiones u otros caracteres especiales.");
-          return;
-        }
-
         const startDate = document.getElementById("startDate").value || null;
         const endDate = document.getElementById("endDate").value || null;
 
+        document.getElementById("pillTime").style.display = "none";
+        document.getElementById("pillCount").style.display = "none";
+        document.getElementById("out").innerHTML = "";
+
+        if (!plate) {
+          setStatus("warn", "Ingresa una placa válida (sin símbolos).");
+          alert("⚠️ La placa debe ingresarse SIN espacios, puntos o guiones.");
+          return;
+        }
+
         btn.disabled = true;
-        loading.style.display = "inline-flex";
-        meta.textContent = "Consultando…";
-        status.textContent = "OK";
-        status.className = "pill status ok";
+        setStatus("", "Consultando...");
 
         const t0 = performance.now();
 
@@ -244,31 +368,52 @@
             body: JSON.stringify({ plate, startDate, endDate }),
           });
 
-          const ms = Math.round(performance.now() - t0);
-          meta.textContent = `Tiempo: ${ms} ms`;
+          const t1 = performance.now();
+          document.getElementById("pillTime").style.display = "inline-flex";
+          document.getElementById("timeMs").innerText = Math.round(t1 - t0);
+
+          const text = await resp.text();
 
           if (!resp.ok) {
-            const txt = await resp.text();
-            status.textContent = `ERROR ${resp.status}`;
-            status.className = "pill status bad";
-            document.getElementById("out").innerHTML = `<div class="empty">Error:<br><pre style="white-space:pre-wrap;">${escapeHtml(txt)}</pre></div>`;
+            setStatus("bad", "Error");
+            document.getElementById("out").innerHTML =
+              `<div class="errorBox"><b>Error HTTP ${resp.status}</b><br/><br/><pre style="white-space:pre-wrap;margin:0;">${escapeHtml(text)}</pre></div>`;
             return;
           }
 
-          // 👇 Ahora sí: JSON (no texto crudo)
-          const data = await resp.json();
+          // Intentar parsear JSON (tu API devuelve arrays)
+          let data;
+          try {
+            data = JSON.parse(text);
+          } catch {
+            // Si el API devolvió texto (por ejemplo error), mostrarlo
+            setStatus("warn", "Respuesta no es JSON");
+            document.getElementById("out").innerHTML =
+              `<div class="errorBox"><b>La API no devolvió JSON.</b><br/><br/><pre style="white-space:pre-wrap;margin:0;">${escapeHtml(text)}</pre></div>`;
+            return;
+          }
 
-          // Si tu API devuelve { rows: [...] } úsalo. Si devuelve directamente [...] también sirve.
-          const rows = Array.isArray(data) ? data : (data.rows || data.value || []);
+          // data puede ser [ [..fila..], [..fila..] ] o { rows: [...] }
+          const rows = Array.isArray(data) ? data : (data && data.rows) ? data.rows : [];
+
+          document.getElementById("pillCount").style.display = "inline-flex";
+          document.getElementById("count").innerText = Array.isArray(rows) ? rows.length : 0;
+
+          if (!Array.isArray(rows) || rows.length === 0) {
+            setStatus("warn", "Sin resultados");
+            document.getElementById("out").innerHTML = `<div class="empty">Sin resultados.</div>`;
+            return;
+          }
+
+          setStatus("ok", "OK");
           renderTable(rows);
 
         } catch (e) {
-          status.textContent = "ERROR";
-          status.className = "pill status bad";
-          document.getElementById("out").innerHTML = `<div class="empty">Falla de red o API: ${escapeHtml(e.message || e)}</div>`;
+          setStatus("bad", "Error de conexión");
+          document.getElementById("out").innerHTML =
+            `<div class="errorBox"><b>Error de conexión</b><br/><br/>${escapeHtml(e?.message || e)}</div>`;
         } finally {
           btn.disabled = false;
-          loading.style.display = "none";
         }
       }
     </script>
