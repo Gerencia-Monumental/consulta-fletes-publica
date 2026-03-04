@@ -1,4 +1,3 @@
-<!-- VERSION: 2026-03-04-1 -->
 <!DOCTYPE html>
 <html lang="es">
   <head>
@@ -15,8 +14,6 @@
         --muted: rgba(234, 242, 255, 0.7);
         --line: rgba(255, 255, 255, 0.10);
         --accent: #3b82f6;
-        --ok: #22c55e;
-        --err: #ef4444;
       }
 
       * { box-sizing: border-box; }
@@ -33,14 +30,9 @@
         padding: 42px 18px;
       }
 
-      .wrap { width: min(1100px, 100%); }
+      .wrap { width: min(1200px, 100%); }
 
-      h1 {
-        margin: 0 0 10px 0;
-        font-size: 42px;
-        letter-spacing: 0.2px;
-      }
-
+      h1 { margin: 0 0 10px 0; font-size: 42px; }
       .sub { margin: 0 0 22px 0; color: var(--muted); }
 
       .card {
@@ -82,7 +74,7 @@
         border-radius: 12px;
         background: linear-gradient(180deg, rgba(59,130,246,1), rgba(37,99,235,1));
         color: white;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
         box-shadow: 0 8px 18px rgba(59,130,246,0.25);
       }
@@ -117,12 +109,7 @@
         background: var(--card2);
       }
 
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 760px;
-      }
-
+      table { width: 100%; border-collapse: collapse; min-width: 900px; }
       thead th {
         text-align: left;
         font-size: 12px;
@@ -183,11 +170,9 @@
           <span class="badge" id="countBadge">Resultados</span>
         </div>
 
-        <div class="table-wrap" style="margin-top: 14px;">
+        <div class="table-wrap">
           <table>
-            <thead>
-              <tr id="theadRow"></tr>
-            </thead>
+            <thead><tr id="theadRow"></tr></thead>
             <tbody id="tbody"></tbody>
           </table>
         </div>
@@ -199,81 +184,63 @@
     </div>
 
     <script>
-      // =========================
-      // CONFIG: columnas a mostrar
-      // =========================
-      // Excel: A=0, B=1, C=2, D=3, E=4, F=5, J=9, K=10, L=11, M=12, N=13, S=18
-      const COLUMNS = [
-        { letter: "A", idx: 0,  type: "dateMask" },
-        { letter: "B", idx: 1,  type: "text"     },
-        { letter: "C", idx: 2,  type: "dateMask" },
-        { letter: "D", idx: 3,  type: "dateMask" },
-        { letter: "E", idx: 4,  type: "firstLetterMask" },
-        { letter: "F", idx: 5,  type: "firstLetterMask" },
-        { letter: "J", idx: 9,  type: "text"     },
-        { letter: "K", idx: 10, type: "text"     },
-        { letter: "L", idx: 11, type: "text"     },
-        { letter: "M", idx: 12, type: "text"     },
-        { letter: "N", idx: 13, type: "text"     },
-        { letter: "S", idx: 18, type: "text"     },
+      // ===========
+      // SELECTOR por NOMBRE DE COLUMNA (según tu Excel)
+      // ===========
+      const DESIRED = [
+        { key: "CUMPLIDO EL",           show: "CUMPLIDO EL",           type: "dateMask" },
+        { key: "ESTADO DE CUMPLIDO",    show: "ESTADO DE CUMPLIDO",    type: "text" },
+        { key: "PAGADO EL",             show: "PAGADO EL",             type: "dateMask" },
+        { key: "FECHAS VIAJES",         show: "FECHAS VIAJES",         type: "dateMask" },
+        { key: "PLACA",                 show: "PLACA",                 type: "firstLetterMask" }, // E
+        { key: "CONDUCTOR",             show: "CONDUCTOR",             type: "firstLetterMask" }, // F
+        { key: "VALOR TOTAL DEL FLETE", show: "VALOR TOTAL DEL FLETE", type: "text" }, // J
+        { key: "ANTICIPO",              show: "ANTICIPO",              type: "text" }, // K
+        { key: "ICA",                   show: "ICA",                   type: "text" }, // L
+        { key: "INTER2,4%",             show: "INTER2,4%",             type: "text" }, // M
+        { key: "RET",                   show: "RET",                   type: "text" }, // N
+        { key: "VALOR TOTAL A PAGAR",   show: "VALOR TOTAL A PAGAR",   type: "text" }, // S
       ];
 
-      // =========================
-      // Helpers de formato
-      // =========================
+      // ===========
+      // Helpers
+      // ===========
       function normalizePlate(s) {
         return (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
       }
 
-      function pad2(n) {
-        return String(n).padStart(2, "0");
-      }
+      function pad2(n) { return String(n).padStart(2, "0"); }
 
-      // Convierte posibles formatos a {dd, mm} y devuelve "DD-MM-****"
+      // DD-MM-****
       function dateMask(value) {
         if (value === null || value === undefined || value === "") return "";
 
-        // Si viene como número (posible serial Excel)
+        // Excel serial number
         if (typeof value === "number" && isFinite(value)) {
-          // Excel serial date (base 1899-12-30)
           const base = new Date(Date.UTC(1899, 11, 30));
           const d = new Date(base.getTime() + value * 86400000);
-          const dd = pad2(d.getUTCDate());
-          const mm = pad2(d.getUTCMonth() + 1);
-          return `${dd}-${mm}-****`;
+          return `${pad2(d.getUTCDate())}-${pad2(d.getUTCMonth() + 1)}-****`;
         }
 
         const s = String(value).trim();
 
-        // ISO: YYYY-MM-DD
+        // ISO YYYY-MM-DD
         const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-        if (iso) {
-          const mm = iso[2];
-          const dd = iso[3];
-          return `${dd}-${mm}-****`;
-        }
+        if (iso) return `${iso[3]}-${iso[2]}-****`;
 
         // DD/MM/YYYY o DD-MM-YYYY
         const dmy = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/);
-        if (dmy) {
-          const dd = pad2(dmy[1]);
-          const mm = pad2(dmy[2]);
-          return `${dd}-${mm}-****`;
-        }
+        if (dmy) return `${pad2(dmy[1])}-${pad2(dmy[2])}-****`;
 
-        // Si viene tipo "2026/03/04" o similar
+        // YYYY/MM/DD
         const ymd = s.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
-        if (ymd) {
-          const mm = pad2(ymd[2]);
-          const dd = pad2(ymd[3]);
-          return `${dd}-${mm}-****`;
-        }
+        if (ymd) return `${pad2(ymd[3])}-${pad2(ymd[2])}-****`;
 
-        // Si no podemos parsear, lo devolvemos tal cual (mejor que romper)
+        // Si no parece fecha, lo devolvemos tal cual (para no dañarlo)
         return s;
       }
 
-      // E/F: primera letra + *****
+      // Primera letra + *****
       function firstLetterMask(value) {
         if (value === null || value === undefined) return "";
         const s = String(value).trim();
@@ -289,54 +256,67 @@
         }
       }
 
-      // Soporta filas como array o como objeto con claves tipo A,B,C...
-      function getCell(row, col) {
-        if (Array.isArray(row)) return row[col.idx];
-        // si el backend devuelve objeto {A:..., B:...} o {0:...}
-        if (row && typeof row === "object") {
-          if (col.letter in row) return row[col.letter];
-          if (String(col.idx) in row) return row[String(col.idx)];
-        }
-        return "";
+      function normHeader(h) {
+        return String(h || "")
+          .trim()
+          .replace(/\s+/g, " ")
+          .toUpperCase();
       }
 
-      // =========================
-      // Render de tabla
-      // =========================
+      // ===========
+      // Render
+      // ===========
       function renderHeader() {
         const tr = document.getElementById("theadRow");
         tr.innerHTML = "";
-        for (const c of COLUMNS) {
+        for (const c of DESIRED) {
           const th = document.createElement("th");
-          // Encabezado por letra (A,B,C...) tal como pediste
-          th.textContent = c.letter;
+          th.textContent = c.show;
           tr.appendChild(th);
         }
       }
 
-      function renderRows(rows) {
+      function renderRows(headers, rows) {
         const tbody = document.getElementById("tbody");
         tbody.innerHTML = "";
 
         if (!rows || !rows.length) return;
 
+        // Mapa header -> índice
+        const map = new Map();
+        headers.forEach((h, i) => map.set(normHeader(h), i));
+
         for (const row of rows) {
           const tr = document.createElement("tr");
-          for (const c of COLUMNS) {
+
+          for (const c of DESIRED) {
             const td = document.createElement("td");
-            const raw = getCell(row, c);
-            td.textContent = applyType(c.type, raw);
+
+            // si viene como array usamos índice por header
+            if (Array.isArray(row)) {
+              const idx = map.get(normHeader(c.key));
+              const raw = (idx === undefined) ? "" : row[idx];
+              td.textContent = applyType(c.type, raw);
+            } else if (row && typeof row === "object") {
+              // si viene como objeto: row["PLACA"]
+              const raw = row[c.key] ?? row[normHeader(c.key)] ?? "";
+              td.textContent = applyType(c.type, raw);
+            } else {
+              td.textContent = "";
+            }
+
             tr.appendChild(td);
           }
+
           tbody.appendChild(tr);
         }
       }
 
-      // =========================
-      // Submit
-      // =========================
       renderHeader();
 
+      // ===========
+      // Submit
+      // ===========
       async function submitForm() {
         const btn = document.getElementById("btn");
         btn.disabled = true;
@@ -373,39 +353,69 @@
           const ms = Math.round(performance.now() - t0);
           timeBadge.textContent = `Tiempo: ${ms} ms`;
 
-          const contentType = (resp.headers.get("content-type") || "").toLowerCase();
+          const text = await resp.text();
           let data;
+          try { data = JSON.parse(text); }
+          catch { data = null; }
 
-          // Intentar JSON (ideal)
-          if (contentType.includes("application/json")) {
-            data = await resp.json();
-          } else {
-            // Si backend aún devuelve texto, intentamos parsearlo
-            const text = await resp.text();
-            try { data = JSON.parse(text); }
-            catch { data = { ok: resp.ok, rows: [] }; }
-          }
-
-          // Normalizar: esperamos { rows: [...] } o directamente [...]
-          const rows = Array.isArray(data) ? data : (data.rows || data.data || []);
-
-          countBadge.textContent = `Resultados: ${rows.length}`;
-
-          if (!resp.ok) {
+          if (!resp.ok || !data) {
             statusBadge.className = "badge err";
             statusBadge.textContent = "Error";
-            renderRows([]);
-            alert("El servidor respondió con error. Revisa el log de la API.");
-          } else {
-            statusBadge.className = "badge ok";
-            statusBadge.textContent = "OK";
-            renderRows(rows);
+            countBadge.textContent = "Resultados: 0";
+            document.getElementById("tbody").innerHTML = "";
+            alert("Error en API. Abre GitHub Actions > run > logs para ver el error.");
+            btn.disabled = false;
+            return;
           }
+
+          // Normalización de respuesta:
+          // 1) {headers:[], rows:[]}
+          // 2) {rows:[]} donde rows[0] puede ser headers
+          // 3) [] (array) donde [0] puede ser headers
+          let headers = data.headers || null;
+          let rows = data.rows || data.data || null;
+
+          if (Array.isArray(data)) {
+            rows = data;
+          }
+
+          // Si no vienen headers pero el primer row parece ser headers (strings conocidos)
+          if (!headers && Array.isArray(rows) && rows.length > 0 && Array.isArray(rows[0])) {
+            const first = rows[0].map(normHeader);
+            const looksLikeHeader =
+              first.includes(normHeader("PLACA")) &&
+              first.includes(normHeader("CONDUCTOR")) &&
+              first.includes(normHeader("FECHAS VIAJES"));
+
+            if (looksLikeHeader) {
+              headers = rows[0];
+              rows = rows.slice(1);
+            }
+          }
+
+          // Si aún no hay headers, NO se puede mapear bien -> avisar
+          if (!headers || !Array.isArray(headers)) {
+            statusBadge.className = "badge err";
+            statusBadge.textContent = "Error";
+            countBadge.textContent = "Resultados: 0";
+            document.getElementById("tbody").innerHTML = "";
+            alert("Tu API no está enviando headers. Debe enviar headers para poder filtrar columnas por nombre.");
+            btn.disabled = false;
+            return;
+          }
+
+          countBadge.textContent = `Resultados: ${rows.length}`;
+          statusBadge.className = "badge ok";
+          statusBadge.textContent = "OK";
+
+          renderRows(headers, rows);
+
         } catch (e) {
           statusBadge.className = "badge err";
           statusBadge.textContent = "Error";
-          renderRows([]);
-          alert("Error consultando la API. Revisa conexión o logs.");
+          countBadge.textContent = "Resultados: 0";
+          document.getElementById("tbody").innerHTML = "";
+          alert("Error consultando la API. Revisa logs.");
         } finally {
           btn.disabled = false;
         }
