@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Consulta de Operaciones</title>
+  </head>
+  <body>
+    <h2>Consulta de Operaciones</h2>
+
+    <label>Placa del vehículo</label><br />
+    <input id="plate" /><br /><br />
+
+    <label>Fecha inicio</label><br />
+    <input type="date" id="startDate" /><br /><br />
+
+    <label>Fecha final</label><br />
+    <input type="date" id="endDate" /><br /><br />
+
+    <button onclick="submitForm()">BUSCAR OPERACIONES</button>
+
+    <div id="result" style="margin-top:20px; white-space:pre-wrap;"></div>
+
+    <script>
+      function normalizePlate(s) {
+        return (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+      }
+
+      async function submitForm() {
+        const plate = normalizePlate(document.getElementById("plate").value);
+
+        if (!plate) {
+          alert(
+            "⚠️ La placa debe ingresarse SIN espacios, puntos, guiones u otros caracteres especiales."
+          );
+          return;
+        }
+
+        const startDate = document.getElementById("startDate").value || null;
+        const endDate = document.getElementById("endDate").value || null;
+
+        document.getElementById("result").innerText = "Consultando...";
+
+        const resp = await fetch("/api/buscar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ plate, startDate, endDate }),
+        });
+
+        const text = await resp.text();
+        document.getElementById("result").innerText = text;
+      }
+    </script>
+  </body>
+</html>
