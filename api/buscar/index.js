@@ -29,7 +29,6 @@ function pad2(n) {
 function maskDate(v) {
   if (v === null || v === undefined || v === "") return "";
 
-  // Si viene como número serial de Excel
   if (typeof v === "number" && isFinite(v)) {
     const base = new Date(Date.UTC(1899, 11, 30));
     const d = new Date(base.getTime() + v * 86400000);
@@ -38,11 +37,9 @@ function maskDate(v) {
 
   const s = String(v).trim();
 
-  // yyyy-mm-dd
   const m1 = s.match(/(\d{4})-(\d{2})-(\d{2})/);
   if (m1) return `${m1[3]}-${m1[2]}-****`;
 
-  // dd/mm/yyyy o dd-mm-yyyy
   const m2 = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
   if (m2) return `${pad2(m2[1])}-${pad2(m2[2])}-****`;
 
@@ -58,12 +55,12 @@ function maskFirst(v) {
 function transformPickedRow(row) {
   const out = PICK.map(i => row?.[i] ?? "");
 
-  // A,C,D -> mask fecha
+  // A,C,D -> fecha
   out[0] = maskDate(out[0]);
   out[2] = maskDate(out[2]);
   out[3] = maskDate(out[3]);
 
-  // E,F -> primera letra + *****
+  // E,F -> máscara
   out[4] = maskFirst(out[4]);
   out[5] = maskFirst(out[5]);
 
@@ -126,7 +123,6 @@ module.exports = async function (context, req) {
       return;
     }
 
-    // 1. Obtener token
     const tokenUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
 
     const tokenParams = new URLSearchParams();
@@ -145,7 +141,6 @@ module.exports = async function (context, req) {
       throw new Error("No se pudo obtener access token");
     }
 
-    // 2. Leer filas de la tabla
     const graphUrl = `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/workbook/tables('${encodeURIComponent(tableName)}')/rows?$top=5000`;
 
     const graphResp = await axios.get(graphUrl, {
@@ -159,17 +154,16 @@ module.exports = async function (context, req) {
       .map(r => (Array.isArray(r.values) && Array.isArray(r.values[0]) ? r.values[0] : null))
       .filter(Boolean);
 
-    // 3. Filtros
     const start = startDate ? new Date(startDate + "T00:00:00Z") : null;
     const end = endDate ? new Date(endDate + "T23:59:59Z") : null;
 
     const filtered = rawRows.filter(row => {
-      const plateCell = normalizePlate(row[4]); // columna E = PLACA
+      const plateCell = normalizePlate(row[4]); // E = PLACA
       if (plateCell !== normalizedPlate) return false;
 
       if (!start && !end) return true;
 
-      const tripDate = parseDateValue(row[3]); // columna D = FECHAS VIAJES
+      const tripDate = parseDateValue(row[3]); // D = FECHAS VIAJES
       if (!tripDate) return false;
 
       if (start && tripDate < start) return false;
@@ -178,7 +172,18 @@ module.exports = async function (context, req) {
       return true;
     });
 
-    // 4. Solo columnas deseadas + máscaras
+    // Más reciente primero por FECHAS VIAJES (D = índice 3)
+    filtered.sort((a, b) => {
+      const da = parseDateValue(a[3]);
+      const db = parseDateValue(b[3]);
+
+      if (!da && !db) return 0;
+      if (!da) return 1;
+      if (!db) return -1;
+
+      return db - da;
+    });
+
     const filteredRows = filtered.map(transformPickedRow);
 
     context.res = {
