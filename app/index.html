@@ -17,23 +17,34 @@
       }
 
       * { box-sizing: border-box; }
+
       body {
         margin: 0;
         font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
         color: var(--text);
         min-height: 100vh;
-        background: radial-gradient(1200px 600px at 30% 0%, #0b2b63 0%, transparent 60%),
-                    radial-gradient(900px 500px at 80% 10%, #0b4b3f 0%, transparent 55%),
-                    linear-gradient(180deg, var(--bg1), var(--bg2));
+        background:
+          radial-gradient(1200px 600px at 30% 0%, #0b2b63 0%, transparent 60%),
+          radial-gradient(900px 500px at 80% 10%, #0b4b3f 0%, transparent 55%),
+          linear-gradient(180deg, var(--bg1), var(--bg2));
         display: flex;
         justify-content: center;
-        padding: 42px 18px;
+        padding: 24px 14px;
       }
 
       .wrap { width: min(1200px, 100%); }
 
-      h1 { margin: 0 0 10px 0; font-size: 42px; }
-      .sub { margin: 0 0 22px 0; color: var(--muted); }
+      h1 {
+        margin: 0 0 10px 0;
+        font-size: clamp(28px, 5vw, 42px);
+        line-height: 1.1;
+      }
+
+      .sub {
+        margin: 0 0 22px 0;
+        color: var(--muted);
+        font-size: 15px;
+      }
 
       .card {
         background: var(--card);
@@ -51,7 +62,12 @@
         align-items: end;
       }
 
-      label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+      label {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
 
       input {
         width: 100%;
@@ -61,6 +77,7 @@
         background: rgba(0,0,0,0.25);
         color: var(--text);
         outline: none;
+        font-size: 15px;
       }
 
       input:focus {
@@ -77,6 +94,7 @@
         font-weight: 700;
         cursor: pointer;
         box-shadow: 0 8px 18px rgba(59,130,246,0.25);
+        font-size: 15px;
       }
 
       button:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -109,7 +127,12 @@
         background: var(--card2);
       }
 
-      table { width: 100%; border-collapse: collapse; min-width: 900px; }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1000px;
+      }
+
       thead th {
         text-align: left;
         font-size: 12px;
@@ -126,13 +149,52 @@
         white-space: nowrap;
       }
 
-      tbody tr:hover td { background: rgba(255,255,255,0.03); }
+      tbody tr:hover td {
+        background: rgba(255,255,255,0.03);
+      }
 
-      .note { margin-top: 10px; color: var(--muted); font-size: 12px; }
+      .note {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 12px;
+      }
 
       @media (max-width: 880px) {
-        .grid { grid-template-columns: 1fr; }
-        button { width: 100%; }
+        body {
+          padding: 14px 10px;
+        }
+
+        .card {
+          padding: 14px;
+          border-radius: 14px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        button {
+          width: 100%;
+        }
+
+        .badges {
+          gap: 8px;
+        }
+
+        .badge {
+          font-size: 11px;
+          padding: 7px 9px;
+        }
+
+        table {
+          min-width: 850px;
+        }
+
+        thead th,
+        tbody td {
+          padding: 10px 10px;
+          font-size: 12px;
+        }
       }
     </style>
   </head>
@@ -184,38 +246,32 @@
     </div>
 
     <script>
-      // ===========
-      // SELECTOR por NOMBRE DE COLUMNA (según tu Excel)
-      // ===========
       const DESIRED = [
-        { key: "CUMPLIDO EL",           show: "CUMPLIDO EL",           type: "dateMask" },
-        { key: "ESTADO DE CUMPLIDO",    show: "ESTADO DE CUMPLIDO",    type: "text" },
-        { key: "PAGADO EL",             show: "PAGADO EL",             type: "dateMask" },
-        { key: "FECHAS VIAJES",         show: "FECHAS VIAJES",         type: "dateMask" },
-        { key: "PLACA",                 show: "PLACA",                 type: "firstLetterMask" }, // E
-        { key: "CONDUCTOR",             show: "CONDUCTOR",             type: "firstLetterMask" }, // F
-        { key: "VALOR TOTAL DEL FLETE", show: "VALOR TOTAL DEL FLETE", type: "text" }, // J
-        { key: "ANTICIPO",              show: "ANTICIPO",              type: "text" }, // K
-        { key: "ICA",                   show: "ICA",                   type: "text" }, // L
-        { key: "INTER2,4%",             show: "INTER2,4%",             type: "text" }, // M
-        { key: "RET",                   show: "RET",                   type: "text" }, // N
-        { key: "VALOR TOTAL A PAGAR",   show: "VALOR TOTAL A PAGAR",   type: "text" }, // S
+        { key: "CUMPLIDO EL", show: "CUMPLIDO EL", type: "dateMask" },
+        { key: "ESTADO DE CUMPLIDO", show: "ESTADO DE CUMPLIDO", type: "text" },
+        { key: "PAGADO EL", show: "PAGADO EL", type: "dateMask" },
+        { key: "FECHAS VIAJES", show: "FECHAS VIAJES", type: "dateMask" },
+        { key: "PLACA", show: "PLACA", type: "firstLetterMask" },
+        { key: "CONDUCTOR", show: "CONDUCTOR", type: "firstLetterMask" },
+        { key: "VALOR TOTAL DEL FLETE", show: "VALOR TOTAL DEL FLETE", type: "money" },
+        { key: "ANTICIPO", show: "ANTICIPO", type: "money" },
+        { key: "ICA", show: "ICA", type: "money" },
+        { key: "INTER2,4%", show: "INTER2,4%", type: "money" },
+        { key: "RET", show: "RET", type: "money" },
+        { key: "VALOR TOTAL A PAGAR", show: "VALOR TOTAL A PAGAR", type: "money" }
       ];
 
-      // ===========
-      // Helpers
-      // ===========
       function normalizePlate(s) {
         return (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
       }
 
-      function pad2(n) { return String(n).padStart(2, "0"); }
+      function pad2(n) {
+        return String(n).padStart(2, "0");
+      }
 
-      // DD-MM-****
       function dateMask(value) {
-        if (value === null || value === undefined || value === "") return "";
+        if (value === null || value === undefined || value === "") return "-";
 
-        // Excel serial number
         if (typeof value === "number" && isFinite(value)) {
           const base = new Date(Date.UTC(1899, 11, 30));
           const d = new Date(base.getTime() + value * 86400000);
@@ -224,48 +280,57 @@
 
         const s = String(value).trim();
 
-        // ISO YYYY-MM-DD
         const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
         if (iso) return `${iso[3]}-${iso[2]}-****`;
 
-        // DD/MM/YYYY o DD-MM-YYYY
         const dmy = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/);
         if (dmy) return `${pad2(dmy[1])}-${pad2(dmy[2])}-****`;
 
-        // YYYY/MM/DD
         const ymd = s.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
         if (ymd) return `${pad2(ymd[3])}-${pad2(ymd[2])}-****`;
 
-        // Si no parece fecha, lo devolvemos tal cual (para no dañarlo)
-        return s;
+        return s || "-";
       }
 
-      // Primera letra + *****
       function firstLetterMask(value) {
-        if (value === null || value === undefined) return "";
+        if (value === null || value === undefined) return "-";
         const s = String(value).trim();
-        if (!s) return "";
+        if (!s) return "-";
         return s[0].toUpperCase() + "*****";
+      }
+
+      function formatMoney(value) {
+        if (value === null || value === undefined || value === "") return "-";
+
+        const raw = String(value).replace(/\./g, "").replace(/,/g, ".").trim();
+        const num = Number(raw);
+
+        if (!isFinite(num)) return String(value);
+
+        return new Intl.NumberFormat("es-CO", {
+          style: "currency",
+          currency: "COP",
+          maximumFractionDigits: 0
+        }).format(num);
       }
 
       function applyType(type, value) {
         switch (type) {
-          case "dateMask": return dateMask(value);
-          case "firstLetterMask": return firstLetterMask(value);
-          default: return (value === null || value === undefined) ? "" : String(value);
+          case "dateMask":
+            return dateMask(value);
+          case "firstLetterMask":
+            return firstLetterMask(value);
+          case "money":
+            return formatMoney(value);
+          default:
+            return (value === null || value === undefined || value === "") ? "-" : String(value);
         }
       }
 
       function normHeader(h) {
-        return String(h || "")
-          .trim()
-          .replace(/\s+/g, " ")
-          .toUpperCase();
+        return String(h || "").trim().replace(/\s+/g, " ").toUpperCase();
       }
 
-      // ===========
-      // Render
-      // ===========
       function renderHeader() {
         const tr = document.getElementById("theadRow");
         tr.innerHTML = "";
@@ -282,7 +347,6 @@
 
         if (!rows || !rows.length) return;
 
-        // Mapa header -> índice
         const map = new Map();
         headers.forEach((h, i) => map.set(normHeader(h), i));
 
@@ -292,17 +356,15 @@
           for (const c of DESIRED) {
             const td = document.createElement("td");
 
-            // si viene como array usamos índice por header
             if (Array.isArray(row)) {
               const idx = map.get(normHeader(c.key));
               const raw = (idx === undefined) ? "" : row[idx];
               td.textContent = applyType(c.type, raw);
             } else if (row && typeof row === "object") {
-              // si viene como objeto: row["PLACA"]
               const raw = row[c.key] ?? row[normHeader(c.key)] ?? "";
               td.textContent = applyType(c.type, raw);
             } else {
-              td.textContent = "";
+              td.textContent = "-";
             }
 
             tr.appendChild(td);
@@ -314,9 +376,6 @@
 
       renderHeader();
 
-      // ===========
-      // Submit
-      // ===========
       async function submitForm() {
         const btn = document.getElementById("btn");
         btn.disabled = true;
@@ -347,7 +406,7 @@
           const resp = await fetch("/api/buscar", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ plate, startDate, endDate }),
+            body: JSON.stringify({ plate, startDate, endDate })
           });
 
           const ms = Math.round(performance.now() - t0);
@@ -363,15 +422,11 @@
             statusBadge.textContent = "Error";
             countBadge.textContent = "Resultados: 0";
             document.getElementById("tbody").innerHTML = "";
-            alert("Error en API. Abre GitHub Actions > run > logs para ver el error.");
+            alert("Error en API. Revisa logs.");
             btn.disabled = false;
             return;
           }
 
-          // Normalización de respuesta:
-          // 1) {headers:[], rows:[]}
-          // 2) {rows:[]} donde rows[0] puede ser headers
-          // 3) [] (array) donde [0] puede ser headers
           let headers = data.headers || null;
           let rows = data.rows || data.data || null;
 
@@ -379,27 +434,12 @@
             rows = data;
           }
 
-          // Si no vienen headers pero el primer row parece ser headers (strings conocidos)
-          if (!headers && Array.isArray(rows) && rows.length > 0 && Array.isArray(rows[0])) {
-            const first = rows[0].map(normHeader);
-            const looksLikeHeader =
-              first.includes(normHeader("PLACA")) &&
-              first.includes(normHeader("CONDUCTOR")) &&
-              first.includes(normHeader("FECHAS VIAJES"));
-
-            if (looksLikeHeader) {
-              headers = rows[0];
-              rows = rows.slice(1);
-            }
-          }
-
-          // Si aún no hay headers, NO se puede mapear bien -> avisar
           if (!headers || !Array.isArray(headers)) {
             statusBadge.className = "badge err";
             statusBadge.textContent = "Error";
             countBadge.textContent = "Resultados: 0";
             document.getElementById("tbody").innerHTML = "";
-            alert("Tu API no está enviando headers. Debe enviar headers para poder filtrar columnas por nombre.");
+            alert("La API no devolvió headers.");
             btn.disabled = false;
             return;
           }
@@ -415,7 +455,7 @@
           statusBadge.textContent = "Error";
           countBadge.textContent = "Resultados: 0";
           document.getElementById("tbody").innerHTML = "";
-          alert("Error consultando la API. Revisa logs.");
+          alert("Error consultando la API.");
         } finally {
           btn.disabled = false;
         }
