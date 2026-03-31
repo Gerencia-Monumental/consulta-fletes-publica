@@ -153,6 +153,49 @@
         background: rgba(255,255,255,0.03);
       }
 
+      .mobile-cards {
+        display: none;
+        margin-top: 14px;
+        gap: 12px;
+      }
+
+      .mobile-card {
+        background: var(--card2);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 14px;
+      }
+
+      .mobile-card-title {
+        font-size: 14px;
+        font-weight: 700;
+        margin: 0 0 10px 0;
+        color: var(--text);
+      }
+
+      .mobile-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .mobile-item {
+        border-top: 1px solid rgba(255,255,255,0.06);
+        padding-top: 8px;
+      }
+
+      .mobile-label {
+        font-size: 11px;
+        color: var(--muted);
+        margin-bottom: 3px;
+      }
+
+      .mobile-value {
+        font-size: 13px;
+        color: var(--text);
+        word-break: break-word;
+      }
+
       .note {
         margin-top: 10px;
         color: var(--muted);
@@ -186,14 +229,12 @@
           padding: 7px 9px;
         }
 
-        table {
-          min-width: 850px;
+        .table-wrap {
+          display: none;
         }
 
-        thead th,
-        tbody td {
-          padding: 10px 10px;
-          font-size: 12px;
+        .mobile-cards {
+          display: grid;
         }
       }
     </style>
@@ -238,6 +279,8 @@
             <tbody id="tbody"></tbody>
           </table>
         </div>
+
+        <div class="mobile-cards" id="mobileCards"></div>
 
         <div class="note">
           Nota: la placa se normaliza automáticamente (mayúscula, sin espacios ni símbolos).
@@ -341,36 +384,79 @@
         }
       }
 
-      function renderRows(headers, rows) {
-        const tbody = document.getElementById("tbody");
-        tbody.innerHTML = "";
-
-        if (!rows || !rows.length) return;
-
+      function buildRowObject(headers, row) {
         const map = new Map();
         headers.forEach((h, i) => map.set(normHeader(h), i));
 
-        for (const row of rows) {
-          const tr = document.createElement("tr");
+        const obj = {};
+        for (const c of DESIRED) {
+          let raw = "";
 
-          for (const c of DESIRED) {
-            const td = document.createElement("td");
-
-            if (Array.isArray(row)) {
-              const idx = map.get(normHeader(c.key));
-              const raw = (idx === undefined) ? "" : row[idx];
-              td.textContent = applyType(c.type, raw);
-            } else if (row && typeof row === "object") {
-              const raw = row[c.key] ?? row[normHeader(c.key)] ?? "";
-              td.textContent = applyType(c.type, raw);
-            } else {
-              td.textContent = "-";
-            }
-
-            tr.appendChild(td);
+          if (Array.isArray(row)) {
+            const idx = map.get(normHeader(c.key));
+            raw = (idx === undefined) ? "" : row[idx];
+          } else if (row && typeof row === "object") {
+            raw = row[c.key] ?? row[normHeader(c.key)] ?? "";
           }
 
+          obj[c.show] = applyType(c.type, raw);
+        }
+
+        return obj;
+      }
+
+      function renderRows(headers, rows) {
+        const tbody = document.getElementById("tbody");
+        const mobileCards = document.getElementById("mobileCards");
+
+        tbody.innerHTML = "";
+        mobileCards.innerHTML = "";
+
+        if (!rows || !rows.length) return;
+
+        for (const row of rows) {
+          const rowObj = buildRowObject(headers, row);
+
+          // tabla desktop
+          const tr = document.createElement("tr");
+          for (const c of DESIRED) {
+            const td = document.createElement("td");
+            td.textContent = rowObj[c.show];
+            tr.appendChild(td);
+          }
           tbody.appendChild(tr);
+
+          // tarjeta móvil
+          const card = document.createElement("div");
+          card.className = "mobile-card";
+
+          const title = document.createElement("div");
+          title.className = "mobile-card-title";
+          title.textContent = `${rowObj["PLACA"]} · ${rowObj["FECHAS VIAJES"]}`;
+          card.appendChild(title);
+
+          const grid = document.createElement("div");
+          grid.className = "mobile-grid";
+
+          for (const c of DESIRED) {
+            const item = document.createElement("div");
+            item.className = "mobile-item";
+
+            const label = document.createElement("div");
+            label.className = "mobile-label";
+            label.textContent = c.show;
+
+            const value = document.createElement("div");
+            value.className = "mobile-value";
+            value.textContent = rowObj[c.show];
+
+            item.appendChild(label);
+            item.appendChild(value);
+            grid.appendChild(item);
+          }
+
+          card.appendChild(grid);
+          mobileCards.appendChild(card);
         }
       }
 
@@ -422,6 +508,7 @@
             statusBadge.textContent = "Error";
             countBadge.textContent = "Resultados: 0";
             document.getElementById("tbody").innerHTML = "";
+            document.getElementById("mobileCards").innerHTML = "";
             alert("Error en API. Revisa logs.");
             btn.disabled = false;
             return;
@@ -439,6 +526,7 @@
             statusBadge.textContent = "Error";
             countBadge.textContent = "Resultados: 0";
             document.getElementById("tbody").innerHTML = "";
+            document.getElementById("mobileCards").innerHTML = "";
             alert("La API no devolvió headers.");
             btn.disabled = false;
             return;
@@ -455,6 +543,7 @@
           statusBadge.textContent = "Error";
           countBadge.textContent = "Resultados: 0";
           document.getElementById("tbody").innerHTML = "";
+          document.getElementById("mobileCards").innerHTML = "";
           alert("Error consultando la API.");
         } finally {
           btn.disabled = false;
